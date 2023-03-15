@@ -1,0 +1,42 @@
+node
+{
+     echo "node name is: ${env.NODE_NAME}"
+    
+  def mavenHome = tool name: "maven3.9.0"
+ 
+stage('checkout')
+   {
+ 
+     git branch: 'stage', credentialsId: '15ae8136-4797-4869-9e09-b2a09fe45578',
+	 url: 'https://github.com/jupiterbank/maven-web-application.git' 
+
+
+  }
+  
+   stage('build')
+     {
+	    sh "${mavenHome}/bin/mvn clean package"
+	 
+	 
+	 
+	   }
+	     stage('ExecuteSQreport')
+     {
+	     sh "${mavenHome}/bin/mvn sonar:sonar"
+	 
+	   }
+	    stage('upload-code-Nexus')
+	   {
+	     sh "${mavenHome}/bin/mvn deploy"
+	   
+	    }
+	    
+	    stage ('deployto tomcat')
+	    sshagent(['fbbf6fdb-c77d-48e7-883d-039df3404b3d']) {
+	    sh "scp -o StrictHostKeyChecking=no /var/lib/jenkins/workspace/Pipeline-Srciptedway/target/maven-web-application.war ec2-user@172.31.6.67:/opt/apache-tomcat-9.0.73/webapps"
+	    
+	        
+	    }
+	    
+	   
+}
